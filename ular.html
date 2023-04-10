@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Ular Python</title>
+
+    <style>
+        #instructions
+        {
+            background-color: #556B2F;
+            color: #FFFFFF;
+            border: none;
+            text-align: center;
+            bottom: 0;
+            height: 30px;
+            font-size: 12pt;
+            float: left;
+            margin: 10px;
+            margin-bottom: -3px;
+            text-align: center;
+        }
+        span
+        {
+        visibility: hidden;
+        color: #fff;
+        }
+        header
+        {
+        text-decoration: underline;
+        }
+        #instructions:hover >span
+        {
+        visibility: visible;
+        }
+        #home {
+            width: 720px;
+            height: 480px;
+            background-image: url('gambar-ular.jpg');
+            background-size: auto 350px;
+            background-repeat: no-repeat;
+            background-color: #66CDAA ;
+            background-position: center;
+            padding: 0;
+            margin: 0;
+        
+            }
+        
+            button {
+            background-color: #556B2F;
+            color: #FFFFFF;
+            border: none;
+            bottom: 0;
+            height: 30px;
+            font-size: 12pt;
+            float: left;
+            width: 90px;
+            margin: 10px 0 0 0;
+            }
+            button:hover {
+            background-color:  #1E90FF;
+            }
+        
+            button:disabled {
+            background-color: #808080;
+            }
+        
+            p {
+            font-family: Helvetica;
+            font-weight: bold;
+            width: 250px;
+            margin: 18px 0 5px 8px;
+            float: left;
+            }
+        
+            .game {
+            margin: 0 auto;
+            border-radius: 5px;
+        
+            }
+            canvas
+            {
+            visibility: hidden;
+            margin: 0;
+            border: 2px solid #000000;
+            border-radius: 3px;
+            }
+    </style>
+</head>
+<body>
+
+    <div id="home"></div>
+
+    <div class="">
+        <button id='btn'>START</button>
+    </div>
+
+    <div id="instructions">
+        <b>Instructions : </b> <span>Untuk mengerakan ular gunakan panah atas, bawah, kiri dan kanan</span>
+      </div>
+
+    <canvas id='canvas1' width='720' height='480'>
+    </canvas>
+
+      <script>
+        let canvas1 = document.getElementById('canvas1');
+        let ctx = canvas1.getContext('2d');
+        let snakeSize = 10;
+        let w = 720;
+        let h = 480;
+        let score = 0;
+        let snake;
+        let food;
+
+        let drawModule = (function () { 
+            let bodySnake = function(x, y) {
+                  //single square of snake
+                  ctx.fillStyle = 'blue';
+                  ctx.fillRect(x*snakeSize, y*snakeSize, snakeSize, snakeSize);
+                  //border color of snake
+                  ctx.strokeStyle = 'red';
+                  ctx.strokeRect(x*snakeSize, y*snakeSize, snakeSize, snakeSize);
+            }
+            let cookie = function(x, y) {
+                  //colr of the cookie
+                  ctx.fillStyle = 'brown';
+                  ctx.fillRect(x*snakeSize, y*snakeSize, snakeSize, snakeSize);
+                  //border color of the cookie
+                  ctx.fillStyle = 'brown';
+                  ctx.fillRect(x*snakeSize+1, y*snakeSize+1, snakeSize-2, snakeSize-2);
+            }
+            let scoreText = function() {
+              // Total score is the number of cookies the snake eats
+              var total_score = "Score: " + score;
+              ctx.fillStyle = 'blue';
+              ctx.fillText(total_score, 20, 20, h-5);
+            }
+        
+            var draw_snake = function() {
+                //Initial Length of snake is 8 squares
+                var l = 7;
+                snake = [];
+                //the for loop pushes the 8 squares of the snake
+                for (var i = l-1; i>=0; i--) {
+                    snake.push({x:0, y:i});
+                }  
+            }
+    
+            var createFood = function() {
+                // size of the cookie is 1 square and this creates food at random places every time
+                  food = {
+                    x: Math.floor((Math.random() * 30) + 1),
+                    y: Math.floor((Math.random() * 30) + 1)
+                  }
+                  for (var i=0; i>snake.length; i++) {
+                    var snakeX = snake[i].x;
+                    var snakeY = snake[i].y;
+                  
+                    if (food.x===snakeX && food.y === snakeY || food.y === snakeY && food.x===snakeX) {
+                      food.x = Math.floor((Math.random() * 30) + 1);
+                      food.y = Math.floor((Math.random() * 30) + 1);
+                    }
+                  }
+              }
+    
+              var checkCollision = function(x, y, array) {
+                //this checks for collision of the snake with it's body and if collided , the game restarts.
+                  for(var i = 0; i < array.length; i++) {
+                    if(array[i].x === x && array[i].y === y)
+                     return true;
+                  } 
+                  return false;
+              }
+    
+              var paint = function(){
+                //space where the snake is moving
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, w, h);
+                //border of the space
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(0, 0, w, h);
+                //disable the START button while playing 
+                btn.setAttribute('disabled', true);
+                document.getElementById('home').style.height = '0';
+                document.getElementById('canvas1').style.visibility = 'visible';
+                var snakeX = snake[0].x;
+                var snakeY = snake[0].y;
+                if (direction == 'right') { 
+                  snakeX++; }
+                else if (direction == 'left') { 
+                  snakeX--; }
+                else if (direction == 'up') { 
+                  snakeY--; 
+                } else if(direction == 'down') { 
+                  snakeY++; }
+                if (snakeX == -1 || snakeX == w/snakeSize || snakeY == -1 || snakeY == h/snakeSize || checkCollision(snakeX, snakeY, snake)) {
+                    //restart game
+                    btn.removeAttribute('disabled', true); //START button enable again
+                    ctx.clearRect(0,0,w,h);  //clean up the canvas
+                    gameloop = clearInterval(gameloop);
+                    return;          
+                  }
+                  
+                  if(snakeX == food.x && snakeY == food.y) {
+                    var tail = {x: snakeX, y: snakeY}; //Create a new head instead of moving the tail
+                    score ++;
+                    
+                    createFood(); //Create new food
+                  } else {
+                    var tail = snake.pop(); //pops out the last cell
+                    tail.x = snakeX; 
+                    tail.y = snakeY;
+                  }
+                  //The snake can now eat the food.
+                  snake.unshift(tail); //puts back the tail as the first cell
+                  for(var i = 0; i < snake.length; i++) {
+                    bodySnake(snake[i].x, snake[i].y);
+                  } 
+                  
+                  cookie(food.x, food.y); 
+                  scoreText();
+            }
+    
+            var init = function(){
+                direction = 'down';
+                draw_snake();
+                createFood();
+                gameloop = setInterval(paint, 80);
+            }
+                return {
+                init : init
+                };
+            //close your module
+                
+            }());
+
+        
+  (function (window, document, drawModule, undefined) {
+    var btn = document.getElementById('btn');
+    btn.addEventListener("click", function(){ drawModule.init();});
+      document.onkeydown = function(event) {
+            keyCode = window.event.keyCode; 
+            keyCode = event.keyCode;
+            switch(keyCode) {
+            
+            case 37: 
+              if (direction != 'right') {
+                direction = 'left';
+              }
+              console.log('left'); 
+              break;
+            case 39:
+              if (direction != 'left') {
+              direction = 'right';
+              console.log('right');
+              }
+              break;
+            case 38:
+              if (direction != 'down') {
+              direction = 'up';
+              console.log('up');
+              }
+              break;
+            case 40:
+              if (direction != 'up') {
+              direction = 'down';
+              console.log('down');
+              }
+              break;
+              }
+          }
+    })(window, document, drawModule);
+
+      </script>
+</body>
+</html>
